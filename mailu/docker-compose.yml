@@ -27,10 +27,7 @@ services:
       options:
         tag: mailu-front
     ports:
-      - "25:25"
       - "465:465"
-      - "587:587"
-      - "993:993"
     networks:
       - default
       - webmail

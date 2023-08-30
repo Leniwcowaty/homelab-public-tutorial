@@ -3,8 +3,6 @@
 
 *Version for ARM processors, like RaspberryPi or Oracle Cloud A1 architecture*
 
-### This is also available on my [Gitea Repository](https://gitea.kacper.stream/leniwcowaty/homelab-public-tutorial)
-
 ---
 
 This repository contains docker files and instructions needed to run your very own on premise homelab, complete with:
@@ -52,7 +50,7 @@ With that everything is fast and snappy, uploading files I am able to reach up t
 ---
 
 ## Prerequisites
-0. Basic knowledge about using Linux command line
+### 0. Basic knowledge about using Linux command line
 
 Without it you won't be able to do this. I will try to hold your hand, but will use a lot of shortcuts and skip obvious things. In places where here or in config files i use <this format>, it means that's something you have to change. For example <your domain> has to be changed to the domain you own.
 
@@ -60,7 +58,7 @@ Without it you won't be able to do this. I will try to hold your hand, but will 
 
 Before anything you need to configure your VCN and subnet! Without it you won't be able to do anything. I won't be explaining it here, as it's easy, you do it in "Networking" section of your Oracle Cloud dashboard.
 
-1. Updating system
+### 1. Updating system
 
 It will prevent you from frustration later:
 
@@ -70,7 +68,7 @@ apt update && apt upgrade -y
 
 Then reboot. Of course, if you're using something else than Ubuntu - figure that out.
 
-2. Changing password
+### 2. Changing password
 
 This step is CRUCIAL if you are on Oracle Cloud. You need to set up password for user `ubuntu`. Why is that important? Becouse if you screw something up with ports, firewall or ssh daemon and won't be able to access server via SSH you could still access it via online console. Without it, you would have to delete whole instance and start over. So after connecting with SSH simply run:
 
@@ -85,17 +83,14 @@ sudo su
 ```
 
 
-3. Preparing firewall
+### 3. Preparing firewall
 
-First of all, you will need to pick 4 ports - SSH, Heimdall, Bitwarden and Nextcloud. They need to be outside of well-known TCP ports. For more info go [here](https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers). Next you have to edit `/etc/iptables/rules.v4` to add these lines:
+First of all - get to know "well known ports" [here](https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers). Next you have to edit `/etc/iptables/rules.v4` to add these lines:
 
 ```bash
 -A INPUT -p tcp -m state --state NEW -m tcp --dport <ssh-port> -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 81 -j ACCEPT #temporary
--A INPUT -p tcp -m state --state NEW -m tcp --dport 587 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 993 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 465 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 25 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
 ```
 
@@ -107,7 +102,7 @@ iptables-restore < /etc/iptables/rules.v4
 
 It's recommended to reboot after. You will also need to open these ports for mask `0.0.0.0/0` in Security List of your subnet in Oracle Cloud dashboard. It's easy, you can do it. If you're using something else, or do it on hardware - keep that in mind, these ports have to be available from outside.
 
-4. Changing SSH port
+### 4. Changing SSH port
 
 First order of business is changing default SSH port from 22 to something else. To do this in OS you can either edit `/etc/ssh/sshd_config` file or create new file, like `/etc/ssh/sshd_config.d/new.conf` (name is not important, but it must have `.conf` extension). there you edit/add this line:
 
@@ -127,7 +122,7 @@ BEFORE YOU DO ANYTHING ELSE, OPEN SECOND SSH CONNECTION WITH THIS NEW PORT AND M
 
 If you really f up, and completly lose access to server, you can always use cloud console on Oracle, using password we set in 1st step.
 
-5. Installing Docker
+### 5. Installing Docker
 
 I won't be going into details here, Docker has great instruction on their website, so I will just point you to [THAT](https://docs.docker.com/engine/install/). If you want rootless Docker, add user `ubuntu` to `docker` group.
 
@@ -137,7 +132,7 @@ You will also need to create Docker network. You can name it however you want, a
 docker network create --driver=bridge --subnet=<subnet CIDR> <subnet name>
 ```
 
-6. Configuring domain
+### 6. Configuring domain
 
 While we could use something like duckdns.org, this is just a half-solution. We cannot set DKIM or DMARC, no encryption, DDoS protection, and we only rent a duckdns subdomain, so our address is quite long (eg. <service>.<domain>.duckdns.org). Instead it's best to buy a cheap domain with obscure TLD, as they can be quite cheap. I personally use Cloudflare, as it provides full DNS configuration options, end-to-end encryption, proxy by default, DDoS protectio and both buying and renewing domains is cheap. I paid about 6 USD/2 years for my domain. It's not that much, and it's worth added security and convinience.
 
@@ -160,7 +155,7 @@ Now you have `compose` directory and in that directories for all services
 
 For the rest of tutorial I will be refering to this scheme, where all files are under `/home/ubuntu/compose/`. If your's is diferent remember to change it in compose and env files.
 
-1. Nginx Proxy Manager
+### 1. Nginx Proxy Manager
 
 [Nginx Proxy Manager GitHub](https://github.com/NginxProxyManager/nginx-proxy-manager)
 
@@ -189,7 +184,7 @@ Next go to SSL tab in Proxy Host creation window and select certificate you just
 
 After you did that (remember to also add the same subdomain as A record in your domain) you can go back to Firewall section of this tutorial and delete line containing port 81. We won't need it anymore. Apply iptables rules, reboot and you can now connect to your proxy through https://<npm subdomain>.<your domain>.
 
-2. Heimdall
+### 2. Heimdall
 
 [Heimdall GitHub](https://github.com/linuxserver/Heimdall)
 
@@ -199,7 +194,7 @@ Same as Nginx Proxy Manager, no configuration is needed, except for providing Do
 
 Now add Proxy Host to Nginx Proxy Manager (and A record if you didn't already) using container name, just like in previous step. It should be `heimdall-heimdall-1` with port 80, but verify this with `docker ps`. Add SSL certificate to the mix and your landing page should now work.
 
-3. Portainer
+### 3. Portainer
 
 [Portainer GitHub](https://github.com/portainer/portainer)
 
@@ -209,11 +204,11 @@ Again - absolutely no changes in docker-compose.yml needed except for changing n
 
 Next - standard procedure of adding Proxy Host to NPM and A record to domain. Nothing out of ordinary here.
 
-4. Mailu
+### 4. Mailu
 
 [Mailu GitHub](https://github.com/Mailu/Mailu)
 
-Mailu is in my opinion the best full-featured email server. It comes with WebUI admin panel as well as Webmail service you can access from your browser. With DKIM and DMARC it's really great and you can even use it as your own mail address. We will however only use it as automated mailing server for our services (like forgotten password or 2FA authentication).
+Mailu is in my opinion the best full-featured email server. It comes with WebUI admin panel as well as Webmail service you can access from your browser. With DKIM and DMARC it's really great and you can even use it as your own mail address (under some circumstances, about which later). We will however only use it as automated mailing server for our services (like forgotten password or 2FA authentication). Please note - if you're using Cloudflare proxying YOU WILL NOT be able to recieve emails on this server, it will be only used to comunicate from services to you. This is because your public IP is being masked. This is more secure, but less convinient. If you're just using your real public IP for this, you will be able to comunicate both ways.
 
 I really, really, really strongly recommend you [read the docs](https://mailu.io/2.0/) as they are filled to the brim with information, useful features and additional configuration parameters. What I have here is absolute minimum and you should set up your Mailu server to your liking by using their [Docker Compose setup utility](https://setup.mailu.io/). But if you don't want to use that, here's a quick rundown what you have to change in files I provided in this repo.
 
@@ -256,7 +251,7 @@ docker compose exec admin flask mailu admin me <your domain> <admin password>
 
 Now you should be able to access both webmail and admin panels (under `/webmail` and `/admin` respectively) and log in with `admin@<yourdomain>`. From admin panel you can create separate users/email addresses for Nextcloud, Bitwarden, Gitea, or you can just use admin address everywhere.
 
-5. Nextcloud
+### 5. Nextcloud
 
 [Nextcloud AIO GitHub](https://github.com/nextcloud/all-in-one)
 
@@ -275,7 +270,7 @@ Important notice - after you use AIO interface to deploy all containers, you HAV
 
 Add `nextcloud-aio-apache` to Nginx Proxy Manager as Proxy Host (and A record for domain) with port you specified above. Again, this can be checked with `docker ps`.
 
-6. Bitwarden
+### 6. Bitwarden
 
 [Bitwarden GitHub](https://github.com/bitwarden/server)
 
@@ -331,7 +326,7 @@ globalSettings__mail__smtp__password=<password>
 
 You know what comes next - adding this to Nginx Proxy Manager. Host `bitwarden-bitwarden-1`, port 8080. Verify with `docker ps`.
 
-7. Privatebin
+### 7. Privatebin
 
 [Pastebin GitHub](https://github.com/PrivateBin/docker-nginx-fpm-alpine)
 
@@ -348,7 +343,7 @@ sudo chown -R 65534:82 /home/ubuntu/compose/privatebin/data
 
 Why these specific owner? Don't ask me, ask project creators. Add it to Nginx Proxy Manager as per usual, checking container name and port with `docker ps` and you're off to the races.
 
-8. Jellyfin
+### 8. Jellyfin
 
 [Jellyfin GitHub](https://github.com/jellyfin/jellyfin)
 
@@ -356,7 +351,7 @@ Jellyfin is alternative to Plex and essentially a private Netflix. It takes in y
 
 This is yet another service, where except for - you guessed it - replacing <docker network> with your network name you don't need to do anything. Run it with `docker compose`, add to Nginx Proxy Manager and that's all.
 
-9. Gitea
+### 9. Gitea
 
 [Gitea Gitea](https://gitea.com/gitea)
 
@@ -364,7 +359,25 @@ This is just a nice, small git service you can use to host your own projects, or
 
 Run with `docker compose`, add to Nginx Proxy Manager, Bob's your uncle, done.
 
-10. Kasm Workspaces
+**OPTIONAL STEP - CLONING REPOS VIA SSH**
+
+If you setup Gitea like this you can access your repos by simply providing login and password while cloning and pushing via https. But if you add 2FA (and yes, it's possible in Gitea) you will have to use tokens to clone and push via https. This can be annoying, so it's better to use SSH. This is not included here for security reasons, but can be enabled. Here are the steps:
+
+- select a free port for ssh connection to Gitea
+- add this port to firewall in VPS (like in prerequisites, section 3), then reboot
+- add this to firewall on your VPS provider
+- in Gitea `docker-compose.yml` in service `gitea` add this section:
+
+```bash
+ports:
+	- '<your selected port>:22'
+```
+
+- run your Gitea with `docker compose -p gitea up -d`
+
+Now if you're just using your real IP in domain DNS no problem, just when cloning use this port. However, if you like me use Cloudflare proxy, you will need to either replace your gitea website with real IP address when cloning, or modify your `~/.ssh/config` to use IP address for host of your Gitea website.
+
+### 10. Kasm Workspaces
 
 [Kasm GitHub](https://github.com/kasmtech/workspaces-images)
 

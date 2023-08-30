@@ -1,0 +1,13 @@
+version: '3.5'
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    network_mode: <docker network>
+    volumes:
+      - ./config:/config
+      - ./cache:/cache
+      - ./media:/media
+    restart: 'unless-stopped'
+    environment:
+      - JELLYFIN_PublishedServerUrl=https://<subdomain>.<your domain>

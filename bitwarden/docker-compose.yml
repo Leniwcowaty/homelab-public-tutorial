@@ -1,0 +1,26 @@
+---
+version: "3.8"
+
+services:
+  bitwarden:
+    depends_on:
+      - db
+    env_file:
+      - settings.env
+    image: bitwarden/self-host:beta
+    restart: unless-stopped
+    volumes:
+      - './bw_data:/etc/bitwarden'
+    network_mode: <docker network>
+
+  db:
+    environment:
+      MARIADB_USER: "bitwarden"
+      MARIADB_PASSWORD: "<db-password>"
+      MARIADB_DATABASE: "bitwarden_vault"
+      MARIADB_RANDOM_ROOT_PASSWORD: "true"
+    image: mariadb:10
+    restart: unless-stopped
+    volumes:
+      - './db_data:/var/lib/mysql'
+    network_mode: <docker network>

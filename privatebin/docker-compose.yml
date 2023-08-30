@@ -1,0 +1,8 @@
+version: '3.3'
+services:
+    privatebin:
+        restart: unless-stopped
+        network_mode: <docker network>
+        volumes:
+            - './data:/srv/data'
+        image: privatebin/unit-alpine
